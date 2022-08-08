@@ -1,5 +1,5 @@
 from tkinter import filedialog
-from transformers import BertForSequenceClassification, BertConfig
+from transformers import BertForSequenceClassification, BertConfig, BertTokenizer
 from transformers import get_linear_schedule_with_warmup
 import torch
 
@@ -11,19 +11,20 @@ import time
 import datetime
 import os
 
+import wandb
+
 from utils import check_gpu, format_time, flat_accuracy
 from dataloader import Dataset
 
 
 class Models():
-    def __init__(self, model_name, num_labels):
+    def __init__(self, model_name='bert', num_labels='2'):
         self.model_name = model_name
         self.num_labels = num_labels
         self.device = check_gpu()
         self.dataset = Dataset()
         self.tokenizer = self.dataset.tokenizer
 
-    
     def BERT(self):
         if self.model_name == 'bert':        
             self.model = model = BertForSequenceClassification.from_pretrained(
@@ -34,6 +35,8 @@ class Models():
                                     output_hidden_states = False,   # Whether the model returns all hidden-states.
                                     return_dict = False,
                                 )
+            self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
         elif self.model_name == 'krbert':
             self.model = model = BertForSequenceClassification.from_pretrained(
                                 "snunlp/KR-BERT-char16424",    # Use the 12-layer BERT model, with an uncased vocab.
@@ -43,6 +46,8 @@ class Models():
                                 output_hidden_states = False,   # Whether the model returns all hidden-states.
                                 return_dict = False,
                              )
+            self.tokenizer = BertTokenizer.from_pretrained("snunlp/KR-BERT-char16424")
+
         self.model = model.to(self.device)
 
         # Note: AdamW is a class from the huggingface library (as opposed to pytorch) 
@@ -74,7 +79,11 @@ class Models():
             print("{:<55} {:>12}".format(p[0], str(tuple(p[1].size()))))
 
 
-    def train(self, train_dataloader, validation_dataloader, epochs = 4):
+    def train(self, train_dataloader, validation_dataloader, epochs = 4, project_title=None, project_entity=None):
+        # after login to wandb at shell command
+        if project_title:
+            wandb.init(project=project_title, entity=project_entity)
+
         # Number of training epochs. The BERT authors recommend between 2 and 4. 
         # We chose to run for 4, but we'll see later that this may be over-fitting the
         # training data.
@@ -298,6 +307,9 @@ class Models():
                     'Validation Time': validation_time
                 }
             )
+            # add to log training_stats in wandb
+            if project_title:
+                wandb.log(training_stats[epoch_i])
 
         print("")
         print("Training complete!")
@@ -356,7 +368,7 @@ class Models():
     def inference(self, sentence):
         # Prediction on test set
 
-        print(f'Predicting labels for {sentence}')
+        # print(f'Predicting labels for {sentence}')
 
         dataloader_ = self.dataset.get_infer_dataloader(data = [sentence])
 
@@ -394,10 +406,11 @@ class Models():
                 pred = np.argmax(logit)
                 predictions.append(pred)
 
-        print('    DONE.')
-        print(f"'{sentence}' 은/는 폭력성이 포함된 문장입니다" if predictions[0] == 1 else f"'{sentence}' 은/는 폭력성이 포함되지 않은 문장입니다")
+        # print('    DONE.')
+        # print(f"'{sentence}' 은/는 폭력성이 포함된 문장입니다" if predictions[0] == 1 else f"'{sentence}' 은/는 폭력성이 포함되지 않은 문장입니다")
 
-        return f"'{sentence}' 은/는 폭력성이 포함된 문장입니다" if predictions[0] == 1 else f"'{sentence}' 은/는 폭력성이 포함되지 않은 문장입니다"
+        # return f"'{sentence}' 은/는 폭력성이 포함된 문장입니다" if predictions[0] == 1 else f"'{sentence}' 은/는 폭력성이 포함되지 않은 문장입니다"
+        return sentence, predictions[0]
 
 
     def save_model(self):
@@ -428,9 +441,9 @@ class Models():
         print(f"Loading model from {load_dir}")
         # Load a trained model and vocabulary that you have fine-tuned
         self.model = self.model.from_pretrained(load_dir)
-        tokenizer = self.tokenizer.from_pretrained(load_dir)
+        self.tokenizer = self.tokenizer.from_pretrained(load_dir)
 
         # Copy the model to the GPU.
         self.model.to(self.device)
 
-        return tokenizer
+        return self.tokenizer
