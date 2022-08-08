@@ -1,5 +1,7 @@
 # PJT_Determining_Violence_in_Chat
 
+# Pytorch 사용
+
 # 참여자
 
 |이름|깃허브|성과|
