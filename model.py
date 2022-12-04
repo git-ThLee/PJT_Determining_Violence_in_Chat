@@ -1,3 +1,12 @@
+'''
+BERT(self)
+about_model(self)
+train(self, train_dataloader, validation_dataloader, epochs = 4, project_title=None, project_entity=None)
+test(self, test_dataloader)
+inference(self, sentence)
+save_model(self)
+load_model(self)
+'''
 from tkinter import filedialog
 from transformers import BertForSequenceClassification, BertConfig, BertTokenizer
 from transformers import get_linear_schedule_with_warmup

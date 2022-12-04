@@ -1,3 +1,9 @@
+'''
+check_gpu()
+flat_accuracy(preds, labels)
+format_time(elapsed)
+split_sentence(chattings)
+'''
 import torch
 import numpy as np
 import datetime
@@ -7,12 +13,9 @@ import re
 def check_gpu():
     # If there's a GPU available...
     if torch.cuda.is_available():    
-
         # Tell PyTorch to use the GPU.    
         device = torch.device("cuda")
-
         print('There are %d GPU(s) available.' % torch.cuda.device_count())
-
         print('We will use the GPU:', torch.cuda.get_device_name(0))
 
     # If not...
@@ -61,9 +64,6 @@ def split_sentence(chattings):
                 try:
                     name, time = re.findall(r'\[[^\]]*\]', name_time[0])
                 except:
-                    # print("except됨")
-                    # print("index : ", idx)
-                    # print("문장 : ", chattings[idx])
                     result[-1][2] += ' ' + chattings[idx].replace('\n', '')
 
                 sentence = re.split(r'\[[^\]]*\] \[[^\]]*\]', chattings[idx])[-1][1:].replace('\n', '')
@@ -81,9 +81,6 @@ def split_sentence(chattings):
                 try:
                     name, time = re.findall(r'\[[^\]]*\]', name_time[0])
                 except:
-                    # print("except됨")
-                    # print("index : ", idx)
-                    # print("문장 : ", chattings[idx])
                     result[-1][2] += ' ' + chattings[idx].replace('\n', '')
 
                 sentence = re.split(r'\[[^\]]*\] \[[^\]]*\]', chattings[idx])[-1][1:].replace('\n', '')

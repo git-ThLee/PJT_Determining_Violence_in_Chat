@@ -1,3 +1,12 @@
+'''
+set_dataset(self, select = 'train')
+set_tokenizer(self, tokenizer)
+get_tokenizer(self)
+make_input(self, sentence)
+make_dataset(self, sentences, labels = None)
+get_dataloader(self)
+get_infer_dataloader(self, data)
+'''
 from transformers import BertTokenizer
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data import TensorDataset
@@ -86,11 +95,6 @@ class Dataset():
         input_ids = torch.tensor(input_ids, dtype=torch.long).to(self.device)
         attention_masks = torch.tensor(attention_masks, dtype=torch.long).to(self.device)
         token_type_ids = torch.tensor(token_type_ids, dtype=torch.long).to(self.device)
-        # inputs = (input_ids, attention_masks, token_type_ids)
-
-        # print("Original Text : ", sentences[0])
-        # print("Tokenizer Text : ", self.tokenizer.tokenize(sentences[0]))
-        # print("Encode Text : ", (self.tokenizer.encode(sentences[0], add_special_tokens = True, max_length = self.max_length)))
 
         if labels == None:
             return TensorDataset(input_ids, attention_masks, token_type_ids)
@@ -98,7 +102,6 @@ class Dataset():
             labels = torch.tensor(labels, dtype=torch.long).to(self.device)
             return TensorDataset(input_ids, attention_masks, token_type_ids, labels)
     
-
     def get_dataloader(self):
         train_dataset = self.make_dataset(self.train.문장.tolist(), self.train.iloc[:, -1].tolist())
         valid_dataset = self.make_dataset(self.valid.문장.tolist(), self.valid.iloc[:, -1].tolist())
@@ -108,7 +111,6 @@ class Dataset():
 
         train_dataloader = DataLoader(
             train_dataset,  # The training samples.
-            # sampler = RandomSampler(train_dataset),
             sampler = SequentialSampler(train_dataset),
             batch_size = batch_size,
         )
